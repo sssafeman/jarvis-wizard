@@ -5,6 +5,7 @@ import type { WizardStatePatch } from "./state/wizard-state.js";
 import { ApiKeys } from "./steps/ApiKeys.js";
 import { Capabilities } from "./steps/Capabilities.js";
 import { Complete } from "./steps/Complete.js";
+import { IntegrationSetup } from "./steps/IntegrationSetup.js";
 import { Installation } from "./steps/Installation.js";
 import { Personality } from "./steps/Personality.js";
 import { UserInfo } from "./steps/UserInfo.js";
@@ -17,6 +18,7 @@ const STEPS: Array<React.ComponentType<WizardStepProps>> = [
   Personality,
   ApiKeys,
   Capabilities,
+  IntegrationSetup,
   Installation,
   Complete
 ];

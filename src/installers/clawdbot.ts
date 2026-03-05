@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { WizardState } from "../state/wizard-state.js";
@@ -18,8 +18,27 @@ const CAPABILITY_SKILLS: Record<string, string> = {
   japanese_language: "japanese-translation-and-tutor"
 };
 
+const CLAWDHUB_REPO_CANDIDATES = [
+  "https://github.com/clawdbot/{skill}.git",
+  "https://github.com/clawdbot/skill-{skill}.git",
+  "https://github.com/clawdbot/{skill}-skill.git"
+];
+
 function clawdbotConfigPath(): string {
   return path.join(os.homedir(), ".clawdbot", "clawdbot.json");
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+async function pathExists(targetPath: string): Promise<boolean> {
+  try {
+    await stat(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function installClawdbotGlobal(): Promise<void> {
@@ -75,18 +94,49 @@ export async function updateTelegramChatId(chatId: string): Promise<void> {
   await writeFile(file, `${JSON.stringify(config, null, 2)}\n`, "utf8");
 }
 
-export async function installSelectedSkills(capabilities: string[]): Promise<SkillInstallSummary> {
+export async function installClawdhubSkill(skillName: string, workspacePath: string): Promise<boolean> {
+  const workspace = workspacePath === "~" || workspacePath.startsWith("~/")
+    ? path.join(os.homedir(), workspacePath.replace(/^~\/?/, ""))
+    : workspacePath;
+  const skillsPath = path.join(workspace, "skills");
+  const targetPath = path.join(skillsPath, skillName);
+
+  await mkdir(skillsPath, { recursive: true });
+
+  if (await pathExists(targetPath)) {
+    return true;
+  }
+
+  const installResult = await runCommandSafe(`clawdhub install ${shellQuote(skillName)}`, skillsPath);
+  if (installResult.ok) {
+    return true;
+  }
+
+  for (const template of CLAWDHUB_REPO_CANDIDATES) {
+    const repo = template.replace("{skill}", skillName);
+    const cloneResult = await runCommandSafe(
+      `git clone ${shellQuote(repo)} ${shellQuote(skillName)}`,
+      skillsPath
+    );
+
+    if (cloneResult.ok) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export async function installSelectedSkills(capabilities: string[], workspacePath: string): Promise<SkillInstallSummary> {
   const installed: string[] = [];
   const failed: string[] = [];
+  const selectedSkills = Array.from(
+    new Set(capabilities.map((capability) => CAPABILITY_SKILLS[capability]).filter((skill): skill is string => Boolean(skill)))
+  );
 
-  for (const capability of capabilities) {
-    const skill = CAPABILITY_SKILLS[capability];
-    if (!skill) {
-      continue;
-    }
-
-    const result = await runCommandSafe(`clawdbot skill install ${skill}`);
-    if (result.ok) {
+  for (const skill of selectedSkills) {
+    const success = await installClawdhubSkill(skill, workspacePath);
+    if (success) {
       installed.push(skill);
     } else {
       failed.push(skill);

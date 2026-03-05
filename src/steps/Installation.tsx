@@ -133,7 +133,7 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
         });
 
         await runTask("install_skills", async () => {
-          const summary = await installSelectedSkills(state.capabilities);
+          const summary = await installSelectedSkills(state.capabilities, state.workspacePath);
           if (summary.failed.length > 0) {
             return `Installed: ${summary.installed.length}, failed: ${summary.failed.join(", ")}`;
           }
@@ -177,7 +177,7 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 6/7 - Installation" subtitle="Applying your setup" />
+      <StepHeader title="Step 6/8 - Installation" subtitle="Applying your setup" />
 
       {tasks.map((task) => {
         if (task.status === "running") {

@@ -14,6 +14,7 @@ const CAPABILITY_OPTIONS = [
   { label: "Study & Canvas LMS", value: "canvas_lms", note: "canvas-lms skill (follow-up setup)" },
   { label: "GitHub integration", value: "github_integration" },
   { label: "Gaming stats / FACEIT CS2", value: "faceit_cs2" },
+  { label: "Todoist tasks", value: "todoist" },
   { label: "YouTube transcripts", value: "youtube_transcripts", note: "youtube-watcher skill" },
   { label: "Japanese language", value: "japanese_language", note: "japanese-translation-and-tutor skill" },
   { label: "Email monitoring", value: "email_monitoring", note: "requires setup after install" }
