@@ -1,4 +1,4 @@
-# ⚡ Jarvis Setup Wizard
+# Jarvis Setup Wizard
 
 A single-command installer that sets up your own personalized Jarvis AI assistant powered by [Clawdbot](https://github.com/clawdbot/clawdbot).
 
