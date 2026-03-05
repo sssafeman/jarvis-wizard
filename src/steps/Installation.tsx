@@ -32,6 +32,16 @@ interface InstallTask {
   detail?: string;
 }
 
+const TASK_ORDER: TaskId[] = [
+  "install_clawdbot",
+  "create_workspace",
+  "generate_files",
+  "write_config",
+  "install_skills",
+  "voice",
+  "start_gateway"
+];
+
 const BASE_TASKS: InstallTask[] = [
   { id: "install_clawdbot", label: "Installing Clawdbot globally", status: "pending" },
   { id: "create_workspace", label: "Creating workspace", status: "pending" },
@@ -41,6 +51,25 @@ const BASE_TASKS: InstallTask[] = [
   { id: "voice", label: "Setting up voice pipeline", status: "pending" },
   { id: "start_gateway", label: "Starting Clawdbot gateway daemon", status: "pending" }
 ];
+
+const TASK_FIX_SUGGESTIONS: Record<TaskId, string> = {
+  install_clawdbot: "Try: npm install -g clawdbot manually, then re-run the wizard",
+  create_workspace: "Check write access to your workspace path and try again",
+  generate_files: "Check write access inside your workspace and try again",
+  write_config: "Check permissions on ~/.clawdbot/",
+  install_skills: "Skills can be installed later with: clawdhub install <name>",
+  voice: "Try installing voice dependencies manually, then retry",
+  start_gateway: "Try: clawdbot gateway start --daemon manually"
+};
+
+class TaskExecutionError extends Error {
+  readonly taskId: TaskId;
+
+  constructor(taskId: TaskId, message: string) {
+    super(message);
+    this.taskId = taskId;
+  }
+}
 
 function statusIcon(status: TaskStatus): string {
   if (status === "success") {
@@ -82,6 +111,8 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
   const [chatError, setChatError] = useState<string | null>(null);
   const [chatSaving, setChatSaving] = useState(false);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [failedTaskId, setFailedTaskId] = useState<TaskId | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   const { exit } = useApp();
 
@@ -100,8 +131,108 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
     } catch (error) {
       const message = (error as Error).message || "Unknown error";
       setTask(id, "error", message);
-      throw error;
+      throw new TaskExecutionError(id, message);
     }
+  }
+
+  async function runTaskById(id: TaskId): Promise<void> {
+    if (state.installMode === "repair" && (id === "create_workspace" || id === "generate_files" || id === "write_config")) {
+      if (id === "create_workspace") {
+        setTask(id, "skipped", "Repair mode keeps existing workspace");
+      } else if (id === "generate_files") {
+        setTask(id, "skipped", "Repair mode keeps existing workspace files");
+      } else {
+        setTask(id, "skipped", "Repair mode keeps existing clawdbot config");
+      }
+      return;
+    }
+
+    if (id === "voice" && !state.capabilities.includes("voice_messages")) {
+      setTask("voice", "skipped", "Voice capability not selected");
+      return;
+    }
+
+    if (id === "install_clawdbot") {
+      await runTask(id, async () => {
+        await installClawdbotGlobal();
+      });
+      return;
+    }
+
+    if (id === "create_workspace") {
+      await runTask(id, async () => {
+        const workspace = await ensureWorkspace(state.workspacePath);
+        return workspace;
+      });
+      return;
+    }
+
+    if (id === "generate_files") {
+      await runTask(id, async () => {
+        await writeWorkspaceFiles(state);
+        return "SOUL.md, USER.md, IDENTITY.md, AGENTS.md, TOOLS.md, MEMORY.md, HEARTBEAT.md";
+      });
+      return;
+    }
+
+    if (id === "write_config") {
+      await runTask(id, async () => {
+        const configPath = await writeClawdbotConfig(state);
+        return configPath;
+      });
+      return;
+    }
+
+    if (id === "install_skills") {
+      await runTask(id, async () => {
+        const summary = await installSelectedSkills(state.capabilities, state.workspacePath);
+        if (summary.failed.length > 0) {
+          throw new Error(`Installed: ${summary.installed.length}, failed: ${summary.failed.join(", ")}`);
+        }
+
+        return summary.installed.length > 0
+          ? `Installed: ${summary.installed.join(", ")}`
+          : "No skill-based capabilities selected";
+      });
+      return;
+    }
+
+    if (id === "voice") {
+      await runTask(id, async () => {
+        await setupVoicePipeline();
+      });
+      return;
+    }
+
+    await runTask(id, async () => {
+      await startGatewayDaemon();
+    });
+  }
+
+  function finishInstallation(): void {
+    if (state.installMode === "repair" || state.telegramChatId.trim()) {
+      onNext({ installMode: "fresh" });
+      return;
+    }
+
+    setPhase("await-chat");
+  }
+
+  async function runFrom(startTaskId: TaskId): Promise<void> {
+    const startIndex = TASK_ORDER.indexOf(startTaskId);
+    const fromIndex = startIndex < 0 ? 0 : startIndex;
+
+    for (let index = fromIndex; index < TASK_ORDER.length; index += 1) {
+      await runTaskById(TASK_ORDER[index]);
+    }
+
+    finishInstallation();
+  }
+
+  function setFailure(taskId: TaskId, message: string): void {
+    setRuntimeError(message);
+    setFailedTaskId(taskId);
+    setPhase("error");
   }
 
   useEffect(() => {
@@ -113,60 +244,54 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
 
     const run = async (): Promise<void> => {
       try {
-        await runTask("install_clawdbot", async () => {
-          await installClawdbotGlobal();
-        });
-
-        await runTask("create_workspace", async () => {
-          const workspace = await ensureWorkspace(state.workspacePath);
-          return workspace;
-        });
-
-        await runTask("generate_files", async () => {
-          await writeWorkspaceFiles(state);
-          return "SOUL.md, USER.md, IDENTITY.md, AGENTS.md, TOOLS.md, MEMORY.md, HEARTBEAT.md";
-        });
-
-        await runTask("write_config", async () => {
-          const configPath = await writeClawdbotConfig(state);
-          return configPath;
-        });
-
-        await runTask("install_skills", async () => {
-          const summary = await installSelectedSkills(state.capabilities, state.workspacePath);
-          if (summary.failed.length > 0) {
-            return `Installed: ${summary.installed.length}, failed: ${summary.failed.join(", ")}`;
-          }
-
-          return summary.installed.length > 0
-            ? `Installed: ${summary.installed.join(", ")}`
-            : "No skill-based capabilities selected";
-        });
-
-        if (state.capabilities.includes("voice_messages")) {
-          await runTask("voice", async () => {
-            await setupVoicePipeline();
-          });
-        } else {
-          setTask("voice", "skipped", "Voice capability not selected");
+        await runFrom(TASK_ORDER[0]);
+      } catch (error) {
+        if (error instanceof TaskExecutionError) {
+          setFailure(error.taskId, error.message);
+          return;
         }
 
-        await runTask("start_gateway", async () => {
-          await startGatewayDaemon();
-        });
-
-        setPhase("await-chat");
-      } catch (error) {
         setRuntimeError((error as Error).message || "Installation failed");
         setPhase("error");
       }
     };
 
     void run();
-  }, [started, state]);
+  }, [started]);
+
+  const retryFailedTask = async (): Promise<void> => {
+    if (!failedTaskId || retrying) {
+      return;
+    }
+
+    setRetrying(true);
+    setRuntimeError(null);
+    setChatError(null);
+    setPhase("running");
+    setTask(failedTaskId, "pending");
+
+    try {
+      await runFrom(failedTaskId);
+      setFailedTaskId(null);
+    } catch (error) {
+      if (error instanceof TaskExecutionError) {
+        setFailure(error.taskId, error.message);
+      } else {
+        setRuntimeError((error as Error).message || "Installation failed");
+        setPhase("error");
+      }
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   useInput((input, key) => {
     if (phase !== "error") {
+      return;
+    }
+
+    if (input.toLowerCase() === "r") {
+      void retryFailedTask();
       return;
     }
 
@@ -174,6 +299,8 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
       exit();
     }
   });
+
+  const fixSuggestion = failedTaskId ? TASK_FIX_SUGGESTIONS[failedTaskId] : null;
 
   return (
     <Box flexDirection="column" padding={1}>
@@ -220,7 +347,10 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
               setChatSaving(true);
               void updateTelegramChatId(chatId.trim())
                 .then(() => {
-                  onNext({ telegramChatId: chatId.trim() });
+                  onNext({
+                    telegramChatId: chatId.trim(),
+                    installMode: "fresh"
+                  });
                 })
                 .catch((error) => {
                   setChatError((error as Error).message || "Failed to save Chat ID");
@@ -233,7 +363,8 @@ export function Installation({ state, onNext }: WizardStepProps): React.JSX.Elem
 
       {chatError ? <Text color="red">✗ {chatError}</Text> : null}
       {phase === "error" && runtimeError ? <Text color="red">Installation failed: {runtimeError}</Text> : null}
-      {phase === "error" ? <Text color="gray">Press q or Esc to exit.</Text> : null}
+      {phase === "error" && fixSuggestion ? <Text color="yellow">{fixSuggestion}</Text> : null}
+      {phase === "error" ? <Text color="gray">Press r to retry failed task, or q / Esc to exit.</Text> : null}
     </Box>
   );
 }

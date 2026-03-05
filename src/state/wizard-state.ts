@@ -1,3 +1,6 @@
+export type InstallMode = "fresh" | "repair";
+export type ExistingInstallAction = "overwrite" | "repair" | null;
+
 export interface WizardState {
   user: {
     name: string;
@@ -26,6 +29,8 @@ export interface WizardState {
   workspacePath: string;
   gatewayPort: number;
   telegramChatId: string;
+  installMode: InstallMode;
+  existingInstallAction: ExistingInstallAction;
 }
 
 export type WizardStatePatch = Partial<Omit<WizardState, "user" | "personality" | "keys" | "model">> & {
@@ -62,7 +67,9 @@ export const DEFAULT_WIZARD_STATE: WizardState = {
   integrations: {},
   workspacePath: "~/clawd",
   gatewayPort: 18789,
-  telegramChatId: ""
+  telegramChatId: "",
+  installMode: "fresh",
+  existingInstallAction: null
 };
 
 export function mergeWizardState(state: WizardState, patch?: WizardStatePatch): WizardState {

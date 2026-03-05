@@ -14,7 +14,7 @@ export function Complete({ state }: WizardStepProps): React.JSX.Element {
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 7/8 - Complete" subtitle="Jarvis is ready" />
+      <StepHeader title="Step 8/8 - Complete" subtitle="Jarvis is ready" />
 
       <Text color="green">✓ Setup complete.</Text>
       <Text>Bot name: {state.personality.assistantName}</Text>

@@ -136,7 +136,7 @@ export function ApiKeys({ state, onNext, onBack }: WizardStepProps): React.JSX.E
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 4/7 - API Keys" subtitle="Connect required providers" />
+      <StepHeader title="Step 3/8 - API Keys" subtitle="Connect required providers" />
 
       {stage === 0 ? (
         <PasswordInput

@@ -53,7 +53,7 @@ export function IntegrationSetup({ state, onNext }: WizardStepProps): React.JSX.
     return <Box />;
   }
 
-  const progressLabel = `Integration ${index + 1}/${routes.length}: ${currentRoute.label}`;
+  const progressLabel = `Step 5/8 - Integration Setup (${index + 1}/${routes.length}): ${currentRoute.label}`;
   const Screen = currentRoute.Screen;
 
   return (

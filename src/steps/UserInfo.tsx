@@ -49,7 +49,7 @@ export function UserInfo({ state, onNext, onBack }: WizardStepProps): React.JSX.
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 2/7 - User Info" subtitle="Tell Jarvis who you are" />
+      <StepHeader title="Step 1/8 - User Info" subtitle="Tell Jarvis who you are" />
 
       {stage === 0 ? (
         <TextInput

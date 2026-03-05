@@ -50,7 +50,7 @@ export function Personality({ state, onNext, onBack }: WizardStepProps): React.J
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 3/7 - Personality" subtitle="Define your assistant identity" />
+      <StepHeader title="Step 2/8 - Personality" subtitle="Define your assistant identity" />
 
       {stage === 0 ? (
         <TextInput

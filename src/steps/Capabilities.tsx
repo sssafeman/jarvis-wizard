@@ -33,7 +33,7 @@ export function Capabilities({ state, onNext, onBack }: WizardStepProps): React.
 
   return (
     <Box flexDirection="column" padding={1}>
-      <StepHeader title="Step 5/7 - Capabilities" subtitle="Choose what Jarvis should be able to do" />
+      <StepHeader title="Step 4/8 - Capabilities" subtitle="Choose what Jarvis should be able to do" />
 
       <MultiSelect
         label="Capabilities"
