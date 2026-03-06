@@ -1,15 +1,41 @@
 {
-  "name": "jarvis-wizard",
-  "version": "0.1.0",
-  "description": "Jarvis setup wizard (Ink TUI)",
+  "name": "@sssafeman/jarvis-wizard",
+  "version": "1.0.0",
+  "description": "One-command setup wizard for your personal Jarvis AI assistant (Clawdbot)",
   "type": "module",
   "bin": {
-    "jarvis-wizard": "src/index.tsx"
+    "jarvis-wizard": "dist/index.js"
   },
+  "main": "./dist/index.js",
+  "files": [
+    "dist/",
+    "install.sh",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "jarvis",
+    "clawdbot",
+    "ai-assistant",
+    "setup-wizard",
+    "telegram-bot"
+  ],
+  "author": "sssafeman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sssafeman/jarvis-wizard.git"
+  },
+  "homepage": "https://github.com/sssafeman/jarvis-wizard#readme",
   "scripts": {
     "start": "tsx src/index.tsx",
     "dev": "tsx src/index.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "postbuild": "node -e \"const fs=require('fs'); const f='dist/index.js'; const c=fs.readFileSync(f,'utf8'); if(!c.startsWith('#!/')) fs.writeFileSync(f,'#!/usr/bin/env node\\\\n'+c);\"; chmod +x dist/index.js",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0",

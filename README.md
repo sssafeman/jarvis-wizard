@@ -1,8 +1,16 @@
 # Jarvis Setup Wizard
 
+[![npm](https://img.shields.io/npm/v/@sssafeman/jarvis-wizard)](https://www.npmjs.com/package/@sssafeman/jarvis-wizard)
+
 A single-command installer that sets up your own personalized Jarvis AI assistant powered by [Clawdbot](https://github.com/clawdbot/clawdbot).
 
 ## Quick Install
+
+```bash
+npx --yes @sssafeman/jarvis-wizard@latest
+```
+
+Or bootstrap with curl:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sssafeman/jarvis-wizard/main/install.sh | bash
@@ -26,7 +34,7 @@ Walks you through a 7-step terminal UI wizard:
 - Anthropic API key
 - Telegram bot token (from [@BotFather](https://t.me/BotFather))
 
-## Manual run
+## Development
 
 ```bash
 git clone https://github.com/sssafeman/jarvis-wizard
