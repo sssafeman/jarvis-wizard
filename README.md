@@ -48,7 +48,7 @@ npx tsx src/index.tsx
 - [x] Phase 1 — Full wizard UI + workspace file generation
 - [x] Phase 2 — Skills & integrations (Canvas, GitHub, FACEIT, Todoist + setup stubs)
 - [x] Phase 3 — Polish + resume/repair + smoke test
-- [ ] Phase 4 — npm publish + distribution
+- [x] Phase 4 — npm publish + distribution
 
 ## Built by
 
