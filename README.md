@@ -1,19 +1,19 @@
 # Jarvis Setup Wizard
 
-[![npm](https://img.shields.io/npm/v/@sssafeman/jarvis-wizard)](https://www.npmjs.com/package/@sssafeman/jarvis-wizard)
+[![npm](https://img.shields.io/npm/v/@safeman/jarvis-wizard)](https://www.npmjs.com/package/@safeman/jarvis-wizard)
 
 A single-command installer that sets up your own personalized Jarvis AI assistant powered by [Clawdbot](https://github.com/clawdbot/clawdbot).
 
 ## Quick Install
 
 ```bash
-npx --yes @sssafeman/jarvis-wizard@latest
+npx --yes @safeman/jarvis-wizard@latest
 ```
 
 Or bootstrap with curl:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sssafeman/jarvis-wizard/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/safeman/jarvis-wizard/main/install.sh | bash
 ```
 
 ## What it does
@@ -37,7 +37,7 @@ Walks you through a 7-step terminal UI wizard:
 ## Development
 
 ```bash
-git clone https://github.com/sssafeman/jarvis-wizard
+git clone https://github.com/safeman/jarvis-wizard
 cd jarvis-wizard
 npm install
 npx tsx src/index.tsx

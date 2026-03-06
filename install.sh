@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PKG="@sssafeman/jarvis-wizard"
+PKG="@safeman/jarvis-wizard"
 
 has_node_18() {
   if ! command -v node >/dev/null 2>&1; then

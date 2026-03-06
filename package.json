@@ -1,5 +1,5 @@
 {
-  "name": "@sssafeman/jarvis-wizard",
+  "name": "@safeman/jarvis-wizard",
   "version": "1.0.0",
   "description": "One-command setup wizard for your personal Jarvis AI assistant (Clawdbot)",
   "type": "module",
